@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require('mongoose');
 
 const User = require("../models/user");
-
+const commonHelper = require("../helper/common")
 
 //API to signup an user.
 function signup(req, res, next) {
@@ -24,7 +24,7 @@ function signup(req, res, next) {
           });
         }
       } else {
-        var password_score = passwordScore(req.body.password);
+        var password_score = commonHelper.passwordScore(req.body.password);
         if(password_score <= 50){
           return res.status(409).json({
             message: "Please enter strong password"
@@ -117,7 +117,7 @@ const authenticate = async (req, res, next) =>{
       }); 
     }
     const decodedToken = await jwt.verify(token, process.env.JWT_KEY);
-    return res.status(401).json({
+    return res.status(200).json({
       message: "Authenticated successfully",
       userId: decodedToken.userId
     });
@@ -127,35 +127,6 @@ const authenticate = async (req, res, next) =>{
     });
     return;
   }
-}
-
-const passwordScore = (pass) =>{
-  var score = 0;
-  if (!pass)
-      return score;
-
-  // award every unique letter until 5 repetitions
-  var letters = new Object();
-  for (var i=0; i<pass.length; i++) {
-      letters[pass[i]] = (letters[pass[i]] || 0) + 1;
-      score += 5.0 / letters[pass[i]];
-  }
-
-  // bonus points for mixing it up
-  var variations = {
-      digits: /\d/.test(pass),
-      lower: /[a-z]/.test(pass),
-      upper: /[A-Z]/.test(pass),
-      nonWords: /\W/.test(pass),
-  }
-
-  var variationCount = 0;
-  for (var check in variations) {
-      variationCount += (variations[check] == true) ? 1 : 0;
-  }
-  score += (variationCount - 1) * 10;
-
-  return parseInt(score);
 }
 
 exports.signup = signup;
